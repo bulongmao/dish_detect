@@ -2,6 +2,10 @@
 
 面向餐盘与食物图像的分割、抠图和数据增强工具集。项目以 Segment Anything Model（SAM）为核心，提供 Gradio 和 FastAPI + Web 两套交互界面，可生成食物 Mask、透明 RGBA 素材和可视化结果。
 
+<p align="center">
+  <img src="docs/readme/augmentation-examples.png" alt="餐盘食物数据增强效果示例" width="900">
+</p>
+
 ## 主要功能
 
 - 前景点/背景点交互式 SAM 分割
@@ -13,6 +17,8 @@
 ## 项目背景
 
 餐具价格识别中，碗盘类别容易与某些菜品、颜色和摆放方式强绑定，模型因此可能学到食物纹理而不是餐具特征。本项目通过“同盘异食”合成数据打破这种伪相关：先从源图提取食物 RGBA，再将其注入目标空碗/空盘，尽量保留餐具材质、盘沿和现场背景。
+
+![数据伪相关问题](docs/readme/data-bias.png)
 
 ## 数据增强流水线
 
@@ -30,10 +36,17 @@ SAM 提取 Food Mask / RGBA
 
 工程中实验了四类组合路径：
 
+<p align="center">
+  <img src="docs/readme/crop-pipeline.png" alt="YOLO 标签裁剪餐碗 Crop" width="48%">
+  <img src="docs/readme/sam-rgba-pipeline.png" alt="SAM 提取 Food Mask 与 RGBA" width="48%">
+</p>
+
 - **A1：单餐碗替换**：在单个有食物餐碗的 Crop 中替换食物。
 - **A2：整图多餐碗替换**：基于检测框/ROI 逐个替换整张图中的餐碗。
 - **B1：空餐碗检测**：SAM 候选 Mask 结合 NMS 和面积等规则过滤。
 - **B2：inner mask 填充**：从 outer mask 构建内层缺口，以 hole coverage 为主目标搜索食物缩放与位置。
+
+![覆盖率控制的缩放与位置搜索](docs/readme/placement-search.png)
 
 ## 质量控制
 
