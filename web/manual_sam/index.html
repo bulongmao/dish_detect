@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SAM Food Studio</title>
+  <link rel="stylesheet" href="./styles.css?v=3">
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+      <div>
+        <div class="brand-title">SAM Food Studio</div>
+        <div class="brand-subtitle">交互式食物分割与透明资产生成</div>
+      </div>
+    </div>
+    <div class="health" id="healthBadge">
+      <span class="health-dot"></span>
+      <span id="healthText">正在连接模型服务</span>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <aside class="sidebar">
+      <section class="panel source-panel">
+        <div class="section-heading">
+          <span class="section-index">01</span>
+          <div>
+            <h2>选择图片</h2>
+            <p>从项目目录加载，或上传本地图片</p>
+          </div>
+        </div>
+
+        <label class="field-label" for="imageSelect">项目图片</label>
+        <div class="select-row">
+          <select id="imageSelect">
+            <option value="">正在读取图片列表…</option>
+          </select>
+          <button class="button button-primary button-compact" id="loadButton" type="button">加载</button>
+        </div>
+
+        <div class="divider"><span>或</span></div>
+
+        <label class="dropzone" id="dropzone" for="fileInput">
+          <input id="fileInput" type="file" accept="image/*">
+          <span class="dropzone-icon" aria-hidden="true">＋</span>
+          <strong>上传或拖入本地图片</strong>
+          <small>JPG、PNG、WEBP、BMP</small>
+        </label>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading compact-heading">
+          <span class="section-index">02</span>
+          <div>
+            <h2>提示点</h2>
+            <p>点击画布添加前景或背景约束</p>
+          </div>
+        </div>
+
+        <div class="segmented" role="radiogroup" aria-label="提示点类型">
+          <label class="segment active" id="foregroundLabel">
+            <input type="radio" name="labelMode" value="前景点" checked>
+            <span class="point-dot foreground-dot"></span>
+            前景点
+          </label>
+          <label class="segment" id="backgroundLabel">
+            <input type="radio" name="labelMode" value="背景点">
+            <span class="point-dot background-dot"></span>
+            背景点
+          </label>
+        </div>
+
+        <div class="candidate-block">
+          <div class="field-row">
+            <label class="field-label" for="candidateSlider">SAM 候选</label>
+            <output id="candidateValue">0</output>
+          </div>
+          <input id="candidateSlider" type="range" min="0" max="2" value="0" step="1" disabled>
+          <div class="score-row" id="scoreRow">
+            <span>候选分数将在首次点击后显示</span>
+          </div>
+        </div>
+
+        <div class="button-grid">
+          <button class="button button-muted" id="undoButton" type="button" disabled>撤销一点</button>
+          <button class="button button-muted" id="clearButton" type="button" disabled>清空提示</button>
+          <button class="button button-accent button-wide" id="commitButton" type="button" disabled>加入最终 Mask</button>
+          <button class="button button-muted" id="resetButton" type="button" disabled>重置全部</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading compact-heading">
+          <span class="section-index">03</span>
+          <div>
+            <h2>后处理</h2>
+            <p>保存前修正孔洞和边缘</p>
+          </div>
+        </div>
+
+        <label class="check-row">
+          <input id="fillHoles" type="checkbox" checked>
+          <span class="custom-check"></span>
+          填充内部孔洞
+        </label>
+
+        <div class="range-field">
+          <div class="field-row">
+            <label for="closeKernel">闭运算核</label>
+            <output id="closeKernelValue">3</output>
+          </div>
+          <input id="closeKernel" type="range" min="0" max="15" value="3" step="1">
+        </div>
+
+        <div class="range-field">
+          <div class="field-row">
+            <label for="erodeIterations">向内腐蚀</label>
+            <output id="erodeIterationsValue">1</output>
+          </div>
+          <input id="erodeIterations" type="range" min="0" max="3" value="1" step="1">
+        </div>
+
+        <button class="button button-muted button-wide" id="previewButton" type="button" disabled>刷新后处理预览</button>
+      </section>
+    </aside>
+
+    <section class="stage-column">
+      <section class="stage-card">
+        <div class="stage-header">
+          <div>
+            <span class="eyebrow">INTERACTIVE CANVAS</span>
+            <h1 id="imageTitle">等待加载图片</h1>
+          </div>
+          <div class="legend">
+            <span><i class="legend-current"></i>当前候选</span>
+            <span><i class="legend-committed"></i>已加入区域</span>
+            <span><i class="legend-outline"></i>后处理边界</span>
+          </div>
+        </div>
+
+        <div class="canvas-shell" id="canvasShell">
+          <canvas id="imageCanvas" aria-label="食物分割画布"></canvas>
+          <div class="empty-state" id="emptyState">
+            <div class="empty-graphic">
+              <span class="plate-ring ring-one"></span>
+              <span class="plate-ring ring-two"></span>
+              <span class="plate-core"></span>
+            </div>
+            <h3>先加载一张食物图片</h3>
+            <p>加载后在食物上点击前景点，在盘底或误选区域点击背景点。</p>
+          </div>
+          <div class="canvas-loading hidden" id="canvasLoading">
+            <span class="spinner"></span>
+            <span id="loadingText">正在处理</span>
+          </div>
+        </div>
+
+        <div class="status-bar">
+          <span class="status-icon" aria-hidden="true">●</span>
+          <pre id="statusText">服务连接后即可开始。</pre>
+        </div>
+      </section>
+
+      <section class="result-card">
+        <div class="result-copy">
+          <span class="eyebrow">RGBA OUTPUT</span>
+          <h2>透明食物资产</h2>
+          <p>完成提示点与 Mask 合并后，保存按钮会同时生成二值 Mask、透明 RGBA、边界可视化和 CSV 元数据。</p>
+          <button class="button button-save" id="saveButton" type="button" disabled>
+            <span>保存 Mask + RGBA</span>
+            <span class="button-arrow">→</span>
+          </button>
+        </div>
+        <div class="preview-frame" id="previewFrame">
+          <img id="rgbaPreview" alt="保存后的透明食物预览">
+          <div class="checkerboard"></div>
+          <span id="previewPlaceholder">保存后在此显示透明资产预览</span>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div class="toast hidden" id="toast"></div>
+  <script src="./app.js?v=4" defer></script>
+</body>
+</html>

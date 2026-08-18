@@ -1,0 +1,12 @@
+--extra-index-url https://download.pytorch.org/whl/cu121
+
+torch==2.5.1+cu121
+torchvision==0.20.1+cu121
+gradio==6.20.0
+fastapi==0.141.1
+uvicorn==0.52.0
+python-multipart==0.0.32
+numpy==2.2.6
+opencv-python==5.0.0.93
+pillow>=11.1,<13
+segment-anything @ https://github.com/facebookresearch/segment-anything/archive/dca509fe793f601edb92606367a655c15ac00fdf.zip

@@ -1,0 +1,22 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.vscode/
+.idea/
+.DS_Store
+
+# Model weights and caches
+checkpoints/
+models/
+*.pth
+*.pt
+*.onnx
+
+# Generated data and outputs
+result/
+result_per_plate_20/
+**/vis/
+**/images/uploaded/
+**/*_filled/
+
